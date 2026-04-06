@@ -6,6 +6,18 @@ import jakarta.persistence.*;
 
 @Entity
 public class User{
+    public Collection<Game> getHostedGames() {
+        return hostedGames;
+    }
+    public void setHostedGames(Collection<Game> hostedGames) {
+        this.hostedGames = hostedGames;
+    }
+    public Collection<Player> getPlayers() {
+        return players;
+    }
+    public void setPlayers(Collection<Player> players) {
+        this.players = players;
+    }
     @Id 
     @GeneratedValue(strategy = GenerationType.AUTO)
     Long id;
@@ -13,6 +25,8 @@ public class User{
     String password;
     @OneToMany(mappedBy = "hostUser")
     private Collection<Game> hostedGames;
+    @OneToMany(mappedBy = "user")
+    private Collection<Player> players;
     public Long getId() {
         return id;
     }
