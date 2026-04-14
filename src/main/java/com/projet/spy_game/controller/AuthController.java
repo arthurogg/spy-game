@@ -1,5 +1,8 @@
 package com.projet.spy_game.controller;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -9,6 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.projet.spy_game.dto.AuthResponse;
 import com.projet.spy_game.dto.LoginRequest;
 import com.projet.spy_game.dto.RegisterRequest;
+import com.projet.spy_game.model.User;
+import com.projet.spy_game.repository.UserRepository;
 import com.projet.spy_game.service.AuthService;
 
 @RestController
@@ -16,6 +21,8 @@ import com.projet.spy_game.service.AuthService;
 public class AuthController {
 
     private final AuthService authService;
+    @Autowired
+    private UserRepository ur;
 
     public AuthController(AuthService authService) {
         this.authService = authService;
@@ -29,5 +36,9 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+    @PostMapping("/get")
+    public List<User> getAll(@RequestBody LoginRequest request) {
+        return ur.findAll();
     }
 }

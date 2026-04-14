@@ -5,6 +5,9 @@
 /home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/dto/AuthResponse.java
 /home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/dto/LoginRequest.java
 /home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/dto/RegisterRequest.java
+/home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/exception/ApiException.java
+/home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/exception/ErrorResponse.java
+/home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/exception/GlobalExceptionHandler.java
 /home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/model/Game.java
 /home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/model/GameStatus.java
 /home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/model/Message.java
