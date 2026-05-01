@@ -20,6 +20,8 @@ public class Game{
     private Collection<Round> rounds;
     @ManyToOne
     private User hostUser;
+    @ManyToOne
+    private WordPair wordPair;
     public Long getId() {
         return id;
     }
@@ -61,5 +63,11 @@ public class Game{
     }
     public void setPlayers(Collection<Player> players) {
         this.players = players;
+    }
+    public WordPair getWordPair() {
+        return wordPair;
+    }
+    public void setWordPair(WordPair wordPair) {
+        this.wordPair = wordPair;
     }
 }

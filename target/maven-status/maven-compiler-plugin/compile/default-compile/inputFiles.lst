@@ -5,6 +5,9 @@
 /home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/controller/AuthController.java
 /home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/controller/GameController.java
 /home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/dto/AuthResponse.java
+/home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/dto/GameDetails.java
+/home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/dto/GameResponse.java
+/home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/dto/GlobalResponse.java
 /home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/dto/LoginRequest.java
 /home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/dto/RegisterRequest.java
 /home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/exception/ApiException.java
@@ -22,6 +25,8 @@
 /home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/model/WordPair.java
 /home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/repository/GameRepository.java
 /home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/repository/PlayerRepository.java
+/home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/repository/RoundRepository.java
 /home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/repository/UserRepository.java
+/home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/repository/WordPairRepository.java
 /home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/service/AuthService.java
 /home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/service/GameService.java

@@ -38,8 +38,4 @@ public class AuthController {
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
-    @GetMapping("/get")
-    public List<User> getAll(@RequestBody LoginRequest request) {
-        return ur.findAll();
-    }
 }

@@ -13,7 +13,7 @@ public class WordPair{
     String civilianWord;
     String spyWord;
     @OneToMany(mappedBy = "wordPair")
-    private Collection<Round> rounds;
+    private Collection<Round> games;
     public Long getId() {
         return id;
     }
@@ -38,10 +38,10 @@ public class WordPair{
     public void setSpyWord(String spyWord) {
         this.spyWord = spyWord;
     }
-    public Collection<Round> getRounds() {
-        return rounds;
+    public Collection<Round> getGames() {
+        return games;
     }
-    public void setRounds(Collection<Round> rounds) {
-        this.rounds = rounds;
+    public void setGames(Collection<Round> games) {
+        this.games = games;
     }
 }

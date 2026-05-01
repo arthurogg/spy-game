@@ -14,8 +14,7 @@ public class Round{
     private RoundPhase phase;
     @ManyToOne
     private Game game;
-    @ManyToOne
-    private WordPair wordPair;
+    
     @OneToMany(mappedBy = "round")
     private Collection<Vote> votes;
     public Long getId() {
@@ -41,12 +40,6 @@ public class Round{
     }
     public void setGame(Game game) {
         this.game = game;
-    }
-    public WordPair getWordPair() {
-        return wordPair;
-    }
-    public void setWordPair(WordPair wordPair) {
-        this.wordPair = wordPair;
     }
     public Collection<Vote> getVotes() {
         return votes;
