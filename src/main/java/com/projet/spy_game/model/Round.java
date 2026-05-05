@@ -17,6 +17,10 @@ public class Round{
     
     @OneToMany(mappedBy = "round")
     private Collection<Vote> votes;
+
+    @ManyToOne
+    private WordPair wordPair;
+    
     public Long getId() {
         return id;
     }
