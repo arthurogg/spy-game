@@ -14,12 +14,11 @@ public class Round{
     private RoundPhase phase;
     @ManyToOne
     private Game game;
-    
+    @ManyToOne
+    private WordPair wordPair;
     @OneToMany(mappedBy = "round")
     private Collection<Vote> votes;
 
-    @ManyToOne
-    private WordPair wordPair;
     
     public Long getId() {
         return id;
