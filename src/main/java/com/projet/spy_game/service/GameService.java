@@ -71,7 +71,7 @@ public class GameService {
         return code.toString();
     }
 
-    public GlobalResponse joinGame(String code){
+    public GameDetails joinGame(String code){
         String username = SecurityContextHolder
             .getContext()
             .getAuthentication()
@@ -99,11 +99,16 @@ public class GameService {
         player.setGame(game);
         player.setEliminated(false);
         playerRepository.save(player);
+        Collection<String> playersNames = new ArrayList<>();
+        for(Player p : game.getPlayers()){
+            playersNames.add(p.getUser().getUsername());
+        }
+        GameDetails details = new GameDetails(playersNames,game.getHostUser().getUsername(),game.getPlayers().size(),game.getStatus());
 
-        return new GlobalResponse("Player joined successfully");
+        return details;
     }
 
-    public GlobalResponse startGame(String code){
+    public GameDetails startGame(String code){
 
         String username = SecurityContextHolder
                 .getContext()
@@ -178,8 +183,13 @@ public class GameService {
         game.setWordPair(pair);
         game.setStatus(GameStatus.IN_PROGRESS);
         gameRepository.save(game);
+        Collection<String> playersNames = new ArrayList<>();
+        for(Player p : game.getPlayers()){
+            playersNames.add(p.getUser().getUsername());
+        }
+        GameDetails details = new GameDetails(playersNames,game.getHostUser().getUsername(),game.getPlayers().size(),game.getStatus());
 
-        return new GlobalResponse("Game started successfully");
+        return details;
     }
 
     public GameDetails getGameDetails(String code){

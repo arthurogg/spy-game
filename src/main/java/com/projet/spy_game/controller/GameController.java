@@ -22,11 +22,11 @@ public class GameController {
         return ResponseEntity.ok(gameService.createGame());
     }
     @PostMapping("/join")
-    public ResponseEntity<GlobalResponse> joinGame(@RequestParam String code){
+    public ResponseEntity<GameDetails> joinGame(@RequestParam String code){
         return ResponseEntity.ok(gameService.joinGame(code));
     }
     @PostMapping("/start")
-    public ResponseEntity<GlobalResponse> startGame(@RequestParam String code){
+    public ResponseEntity<GameDetails> startGame(@RequestParam String code){
         return ResponseEntity.ok(gameService.startGame(code));
     }
     @GetMapping("get")

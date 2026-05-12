@@ -2,7 +2,9 @@ package com.projet.spy_game.dto;
 
 public class AuthResponse {
     public String token;
-    public AuthResponse(String token){
+    public String username;
+    public AuthResponse(String token, String username){
         this.token = token;
+        this.username = username;
     }
 }
