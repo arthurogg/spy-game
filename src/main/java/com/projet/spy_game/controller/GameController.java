@@ -1,11 +1,14 @@
 package com.projet.spy_game.controller;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 
 import com.projet.spy_game.dto.ClueRequest;
 import com.projet.spy_game.dto.GameDetails;
+import com.projet.spy_game.dto.GameLobbyDTO;
 import com.projet.spy_game.dto.GameResponse;
 import com.projet.spy_game.dto.GlobalResponse;
 import com.projet.spy_game.dto.MyRoleResponse;
@@ -57,6 +60,15 @@ public class GameController {
 
         return ResponseEntity.ok(
                 gameService.vote(request)
+        );
+    }
+
+    @GetMapping("/waiting")
+    public ResponseEntity<List<GameLobbyDTO>>
+    getWaitingGames(){
+
+        return ResponseEntity.ok(
+                gameService.getWaitingGames()
         );
     }
 }

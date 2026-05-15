@@ -11,6 +11,7 @@
 /home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/dto/ChatMessage.java
 /home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/dto/ClueRequest.java
 /home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/dto/GameDetails.java
+/home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/dto/GameLobbyDTO.java
 /home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/dto/GameResponse.java
 /home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/dto/GameStateDTO.java
 /home/n7student/Documents/APPLICATIONS-WEB/projet/spy-game/src/main/java/com/projet/spy_game/dto/GlobalResponse.java

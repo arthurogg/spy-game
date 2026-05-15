@@ -8,5 +8,5 @@ import com.projet.spy_game.model.Game;
 import com.projet.spy_game.model.Round;
 
 public interface RoundRepository extends JpaRepository<Round, Long>{
-    Optional<Round> findByGame(Game game);
+    Optional<Round> findTopByGameOrderByRoundNumberDesc(Game game);
 }

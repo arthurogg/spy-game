@@ -1,6 +1,7 @@
 package com.projet.spy_game.repository;
 
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,5 +12,6 @@ import com.projet.spy_game.model.User;
 
 public interface PlayerRepository extends JpaRepository<Player,Long>{
     Player save(Player player);
+    List<Player> findByGame(Game game);
     Optional<Player> findByUserAndGame(User user, Game game);
 }

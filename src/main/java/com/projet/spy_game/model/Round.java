@@ -50,4 +50,10 @@ public class Round{
     public void setVotes(Collection<Vote> votes) {
         this.votes = votes;
     }
+    public WordPair getWordPair() {
+        return wordPair;
+    }
+    public void setWordPair(WordPair wordPair) {
+        this.wordPair = wordPair;
+    }
 }
