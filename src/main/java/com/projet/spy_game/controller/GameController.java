@@ -4,9 +4,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 
+import com.projet.spy_game.dto.ClueRequest;
 import com.projet.spy_game.dto.GameDetails;
 import com.projet.spy_game.dto.GameResponse;
 import com.projet.spy_game.dto.GlobalResponse;
+import com.projet.spy_game.dto.MyRoleResponse;
+import com.projet.spy_game.dto.VoteRequest;
 import com.projet.spy_game.model.Game;
 import com.projet.spy_game.service.GameService;
 
@@ -32,5 +35,28 @@ public class GameController {
     @GetMapping("get")
     public ResponseEntity<GameDetails> getGame(@RequestParam String code){
         return ResponseEntity.ok(gameService.getGameDetails(code));
+    }
+
+    @GetMapping("/my-role")
+    public ResponseEntity<MyRoleResponse> getMyRole(@RequestParam String code) {
+
+        return ResponseEntity.ok(
+                gameService.getMyRole(code)
+        );
+    }
+
+    @PostMapping("/send-clue")
+    public ResponseEntity<GlobalResponse> sendClue(@RequestBody ClueRequest request){
+        return ResponseEntity.ok(
+                gameService.sendClue(request)
+        );
+    }
+
+    @PostMapping("/vote")
+    public ResponseEntity<GlobalResponse> vote(@RequestBody VoteRequest request){
+
+        return ResponseEntity.ok(
+                gameService.vote(request)
+        );
     }
 }

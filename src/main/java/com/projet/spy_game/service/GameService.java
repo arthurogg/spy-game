@@ -1,13 +1,18 @@
 package com.projet.spy_game.service;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
+import com.projet.spy_game.dto.ClueRequest;
 import com.projet.spy_game.dto.GameDetails;
 import com.projet.spy_game.dto.GameResponse;
+import com.projet.spy_game.dto.GameStateDTO;
 import com.projet.spy_game.dto.GlobalResponse;
+import com.projet.spy_game.dto.MyRoleResponse;
+import com.projet.spy_game.dto.VoteRequest;
 import com.projet.spy_game.exception.ApiException;
 import com.projet.spy_game.model.*;
 import com.projet.spy_game.repository.*;
@@ -15,7 +20,9 @@ import com.projet.spy_game.repository.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 @Service
@@ -26,7 +33,10 @@ public class GameService {
     private final PlayerRepository playerRepository;
     private final UserRepository userRepository;
     private final WordPairRepository wordPairRepository;
+    private final ClueRepository clueRepository;
+    private final SimpMessagingTemplate messagingTemplate;
     private final RoundRepository roundRepository;
+    private final VoteRepository voteRepository;
 
     public GameResponse createGame() {
 
@@ -174,7 +184,7 @@ public class GameService {
         Round round = new Round();
         round.setGame(game);
         round.setRoundNumber(1);
-        round.setPhase(RoundPhase.WORD_DISTRIBUTION);
+        round.setPhase(RoundPhase.DESCRIPTION);
 
         roundRepository.save(round);
 
@@ -201,5 +211,497 @@ public class GameService {
         }
         GameDetails details = new GameDetails(playersNames,game.getHostUser().getUsername(),game.getPlayers().size(),game.getStatus());
         return details;
-    }   
+    } 
+ 
+    public MyRoleResponse getMyRole(String code) {
+
+        String username = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        // récupérer user connecté
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() ->
+                        new ApiException(
+                                "User not found",
+                                HttpStatus.NOT_FOUND
+                        ));
+
+        // récupérer game
+        Game game = gameRepository.findByCode(code)
+                .orElseThrow(() ->
+                        new ApiException(
+                                "Game not found",
+                                HttpStatus.NOT_FOUND
+                        ));
+
+        // récupérer player
+        Player player = playerRepository
+                .findByUserAndGame(user, game)
+                .orElseThrow(() ->
+                        new ApiException(
+                                "Player not in game",
+                                HttpStatus.UNAUTHORIZED
+                        ));
+
+        return new MyRoleResponse(
+                player.getRole().name(),
+                player.getAssignedWord()
+        );
+    }
+  
+
+    public GlobalResponse sendClue(ClueRequest request) {
+
+        String username = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        // user
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() ->
+                        new ApiException(
+                                "User not found",
+                                HttpStatus.NOT_FOUND
+                        ));
+
+        // game
+        Game game = gameRepository
+                .findByCode(request.gameCode)
+                .orElseThrow(() ->
+                        new ApiException(
+                                "Game not found",
+                                HttpStatus.NOT_FOUND
+                        ));
+
+        // player
+        Player player = playerRepository
+                .findByUserAndGame(user, game)
+                .orElseThrow(() ->
+                        new ApiException(
+                                "Player not found",
+                                HttpStatus.NOT_FOUND
+                        ));
+
+        // round
+        Round round = roundRepository
+                .findByGame(game)
+                .orElseThrow(() ->
+                        new ApiException(
+                                "Round not found",
+                                HttpStatus.NOT_FOUND
+                        ));
+
+        // vérifier phase
+        if(round.getPhase() != RoundPhase.DESCRIPTION && round.getPhase() != RoundPhase.WORD_DISTRIBUTION){
+            throw new ApiException(
+                    "Not description phase",
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+        // vérifier éliminé
+        if(player.isEliminated()){
+            throw new ApiException(
+                    "Player eliminated",
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+        // empêcher double clue
+        List<Clue> clues = clueRepository.findByRound(round);
+
+        boolean alreadyPlayed = clues.stream()
+                .anyMatch(c ->
+                        c.getPlayer().getId().equals(player.getId())
+                );
+
+        if(alreadyPlayed){
+            throw new ApiException(
+                    "Player already sent clue",
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+        // sauvegarder clue
+        Clue clue = new Clue();
+
+        clue.setContent(request.content);
+
+        clue.setPlayer(player);
+
+        clue.setRound(round);
+
+        clueRepository.save(clue);
+
+        // joueurs vivants
+        List<Player> alivePlayers = game.getPlayers()
+                .stream()
+                .filter(p -> !p.isEliminated())
+                .toList();
+
+        // tous les joueurs ont joué ?
+        if(clues.size() + 1 >= alivePlayers.size()){
+
+            round.setPhase(RoundPhase.VOTING);
+
+            roundRepository.save(round);
+        }
+
+        // construire état
+        GameStateDTO gameState = buildGameState(game);
+        System.out.println(gameState);
+        // websocket update
+        messagingTemplate.convertAndSend(
+                "/topic/game/" + game.getCode() + "/state",
+                gameState
+        );
+
+        return new GlobalResponse(
+                "Clue sent successfully"
+        );
+    }
+    // Méthode utilisée pour construire l'état de jeu et l'envoyer en websockets
+    private GameStateDTO buildGameState(Game game){
+
+        // round courant
+        Round round = roundRepository
+                .findByGame(game)
+                .orElseThrow();
+
+        // joueurs vivants
+        List<Player> alivePlayersList = game.getPlayers()
+                .stream()
+                .filter(p -> !p.isEliminated())
+                .toList();
+
+        // =========================
+        // CLUES
+        // =========================
+
+        List<Clue> clues = clueRepository.findByRound(round);
+
+        Map<String,String> clueMap = new HashMap<>();
+
+        for(Clue clue : clues){
+
+            clueMap.put(
+                    clue.getPlayer()
+                            .getUser()
+                            .getUsername(),
+
+                    clue.getContent()
+            );
+        }
+
+        // =========================
+        // VOTES
+        // =========================
+
+        List<Vote> votes = voteRepository.findByRound(round);
+
+        Map<String,Integer> voteMap = new HashMap<>();
+
+        for(Vote vote : votes){
+
+            String targetUsername = vote.getTargetPlayer()
+                    .getUser()
+                    .getUsername();
+
+            voteMap.put(
+                    targetUsername,
+                    voteMap.getOrDefault(
+                            targetUsername,
+                            0
+                    ) + 1
+            );
+        }
+
+        String eliminatedPlayer = null;
+
+        if(round.getPhase() == RoundPhase.RESULT){
+
+            List<Player> eliminatedPlayers = game.getPlayers()
+                    .stream()
+                    .filter(Player::isEliminated)
+                    .toList();
+
+            if(!eliminatedPlayers.isEmpty()){
+
+                Player lastEliminated = eliminatedPlayers
+                        .get(eliminatedPlayers.size() - 1);
+
+                eliminatedPlayer = lastEliminated
+                        .getUser()
+                        .getUsername();
+            }
+        }
+
+        // WINNER
+        String winner = null;
+
+        long aliveSpies = alivePlayersList
+                .stream()
+                .filter(p ->
+                        p.getRole() == PlayerRole.SPY
+                )
+                .count();
+
+        long aliveCivilians = alivePlayersList
+                .stream()
+                .filter(p ->
+                        p.getRole() == PlayerRole.CIVILIAN
+                )
+                .count();
+
+        // civils gagnent
+        if(aliveSpies == 0){
+
+            winner = "CIVILIANS";
+        }
+
+        // espions gagnent
+        else if(aliveSpies >= aliveCivilians){
+
+            winner = "SPIES";
+        }
+
+        // DTO FINAL
+
+        return new GameStateDTO(
+                game.getCode(),
+                round.getPhase(),
+                alivePlayersList
+                        .stream()
+                        .map(p ->
+                                p.getUser()
+                                        .getUsername()
+                        )
+                        .toList(),
+                clueMap,
+                voteMap,
+                round.getRoundNumber(),
+                eliminatedPlayer,
+                winner
+        );
+    }
+    public GlobalResponse vote(VoteRequest request){
+
+        String username = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        // USER
+        User user = userRepository
+                .findByUsername(username)
+                .orElseThrow(() ->
+                        new ApiException(
+                                "User not found",
+                                HttpStatus.NOT_FOUND
+                        ));
+
+        // GAME
+        Game game = gameRepository
+                .findByCode(request.gameCode)
+                .orElseThrow(() ->
+                        new ApiException(
+                                "Game not found",
+                                HttpStatus.NOT_FOUND
+                        ));
+
+        // PLAYER
+        Player voter = playerRepository
+                .findByUserAndGame(user, game)
+                .orElseThrow(() ->
+                        new ApiException(
+                                "Player not found",
+                                HttpStatus.NOT_FOUND
+                        ));
+
+        // ROUND
+        Round round = roundRepository
+                .findByGame(game)
+                .orElseThrow(() ->
+                        new ApiException(
+                                "Round not found",
+                                HttpStatus.NOT_FOUND
+                        ));
+
+        // phase
+        if(round.getPhase() != RoundPhase.VOTING){
+
+            throw new ApiException(
+                    "Not voting phase",
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+        // éliminé
+        if(voter.isEliminated()){
+
+            throw new ApiException(
+                    "Player eliminated",
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+        // double vote
+        boolean alreadyVoted = voteRepository
+                .existsByPlayerVotingAndRound(
+                        voter,
+                        round
+                );
+
+        if(alreadyVoted){
+
+            throw new ApiException(
+                    "Player already voted",
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+        // target
+        Player target = playerRepository
+                .findById(request.targetPlayerId)
+                .orElseThrow(() ->
+                        new ApiException(
+                                "Target not found",
+                                HttpStatus.NOT_FOUND
+                        ));
+
+        // target éliminé
+        if(target.isEliminated()){
+
+            throw new ApiException(
+                    "Target already eliminated",
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+        // save vote
+        Vote vote = new Vote();
+
+        vote.setPlayerVoting(voter);
+
+        vote.setTargetPlayer(target);
+
+        vote.setRound(round);
+
+        voteRepository.save(vote);
+
+        // tous les votes
+        List<Vote> votes = voteRepository
+                .findByRound(round);
+
+        // joueurs vivants
+        List<Player> alivePlayers = game.getPlayers()
+                .stream()
+                .filter(p -> !p.isEliminated())
+                .toList();
+
+        // tous les joueurs ont voté ?
+        if(votes.size() >= alivePlayers.size()){
+
+            eliminateMostVotedPlayer(
+                    votes,
+                    game
+            );
+        }
+
+        // websocket state update
+        GameStateDTO state = buildGameState(game);
+
+        messagingTemplate.convertAndSend(
+                "/topic/game/" + game.getCode() + "/state",
+                state
+        );
+
+        return new GlobalResponse(
+                "Vote sent successfully"
+        );
+    }
+
+    private void eliminateMostVotedPlayer(List<Vote> votes,Game game){
+
+        Map<Player,Integer> counts = new HashMap<>();
+
+        // compter votes
+        for(Vote vote : votes){
+
+            Player target = vote.getTargetPlayer();
+
+            counts.put(
+                    target,
+                    counts.getOrDefault(target,0) + 1
+            );
+        }
+
+        // max voted
+        Player eliminated = counts.entrySet()
+                .stream()
+                .max(Map.Entry.comparingByValue())
+                .get()
+                .getKey();
+
+        // éliminer
+        eliminated.setEliminated(true);
+
+        playerRepository.save(eliminated);
+
+        // vérifier victoire
+        checkVictory(game);
+    }
+    private void checkVictory(Game game){
+
+        List<Player> alivePlayers = game.getPlayers()
+                .stream()
+                .filter(p -> !p.isEliminated())
+                .toList();
+
+        long aliveSpies = alivePlayers
+                .stream()
+                .filter(p ->
+                        p.getRole() == PlayerRole.SPY
+                )
+                .count();
+
+        long aliveCivilians = alivePlayers
+                .stream()
+                .filter(p ->
+                        p.getRole() == PlayerRole.CIVILIAN
+                )
+                .count();
+
+        Round round = roundRepository
+                .findByGame(game)
+                .orElseThrow();
+
+        // civils gagnent
+        if(aliveSpies == 0){
+
+            round.setPhase(RoundPhase.RESULT);
+
+            roundRepository.save(round);
+
+            return;
+        }
+
+        // espions gagnent
+        if(aliveSpies >= aliveCivilians){
+
+            round.setPhase(RoundPhase.RESULT);
+
+            roundRepository.save(round);
+
+            return;
+        }
+
+        // continuer partie
+        round.setPhase(RoundPhase.DESCRIPTION);
+
+        roundRepository.save(round);
+    }
 }
